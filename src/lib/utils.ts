@@ -24,11 +24,11 @@ import { Gio } from 'astal';
  * @throws Throws a new error with the provided message or a default message.
  */
 export function errorHandler(error: unknown): never {
-    if (error instanceof Error) {
-        throw new Error(error.message);
-    }
+  if (error instanceof Error) {
+    throw new Error(error.message);
+  }
 
-    throw new Error(String(error));
+  throw new Error(String(error));
 }
 
 /**
@@ -43,9 +43,9 @@ export function errorHandler(error: unknown): never {
  * @returns The Gtk.IconInfo object if the icon is found, or null if not found.
  */
 export function lookUpIcon(name?: string, size = 16): Gtk.IconInfo | null {
-    if (!name) return null;
+  if (!name) return null;
 
-    return Gtk.IconTheme.get_default().lookup_icon(name, size, Gtk.IconLookupFlags.USE_BUILTIN);
+  return Gtk.IconTheme.get_default().lookup_icon(name, size, Gtk.IconLookupFlags.USE_BUILTIN);
 }
 
 /**
@@ -57,21 +57,21 @@ export function lookUpIcon(name?: string, size = 16): Gtk.IconInfo | null {
  * @returns An array of unique layout items.
  */
 export function getLayoutItems(): BarModule[] {
-    const { layouts } = options.bar;
+  const { layouts } = options.bar;
 
-    const itemsInLayout: BarModule[] = [];
+  const itemsInLayout: BarModule[] = [];
 
-    Object.keys(layouts.get()).forEach((monitor) => {
-        const leftItems = layouts.get()[monitor].left;
-        const rightItems = layouts.get()[monitor].right;
-        const middleItems = layouts.get()[monitor].middle;
+  Object.keys(layouts.get()).forEach((monitor) => {
+    const leftItems = layouts.get()[monitor].left;
+    const rightItems = layouts.get()[monitor].right;
+    const middleItems = layouts.get()[monitor].middle;
 
-        itemsInLayout.push(...leftItems);
-        itemsInLayout.push(...middleItems);
-        itemsInLayout.push(...rightItems);
-    });
+    itemsInLayout.push(...leftItems);
+    itemsInLayout.push(...middleItems);
+    itemsInLayout.push(...rightItems);
+  });
 
-    return [...new Set(itemsInLayout)];
+  return [...new Set(itemsInLayout)];
 }
 
 /**
@@ -86,22 +86,22 @@ export function getLayoutItems(): BarModule[] {
  * @returns The icon name or the fallback icon.
  */
 export function icon(name: string | null, fallback = icons.missing): string {
-    const validateSubstitute = (name: string): name is keyof typeof substitutes => name in substitutes;
+  const validateSubstitute = (name: string): name is keyof typeof substitutes => name in substitutes;
 
-    if (!name) return fallback || '';
+  if (!name) return fallback || '';
 
-    if (GLib.file_test(name, GLib.FileTest.EXISTS)) return name;
+  if (GLib.file_test(name, GLib.FileTest.EXISTS)) return name;
 
-    let icon: string = name;
+  let icon: string = name;
 
-    if (validateSubstitute(name)) {
-        icon = substitutes[name];
-    }
+  if (validateSubstitute(name)) {
+    icon = substitutes[name];
+  }
 
-    if (lookUpIcon(icon)) return icon;
+  if (lookUpIcon(icon)) return icon;
 
-    print(`no icon substitute "${icon}" for "${name}", fallback: "${fallback}"`);
-    return fallback;
+  print(`no icon substitute "${icon}" for "${name}", fallback: "${fallback}"`);
+  return fallback;
 }
 
 /**
@@ -116,13 +116,13 @@ export function icon(name: string | null, fallback = icons.missing): string {
  * @returns A promise that resolves to the command output as a string.
  */
 export async function bash(strings: TemplateStringsArray | string, ...values: unknown[]): Promise<string> {
-    const cmd =
-        typeof strings === 'string' ? strings : strings.flatMap((str, i) => str + `${values[i] ?? ''}`).join('');
+  const cmd =
+    typeof strings === 'string' ? strings : strings.flatMap((str, i) => str + `${values[i] ?? ''}`).join('');
 
-    return execAsync(['bash', '-c', cmd]).catch((err) => {
-        console.error(cmd, err);
-        return '';
-    });
+  return execAsync(['bash', '-c', cmd]).catch((err) => {
+    console.error(cmd, err);
+    return '';
+  });
 }
 
 /**
@@ -136,10 +136,10 @@ export async function bash(strings: TemplateStringsArray | string, ...values: un
  * @returns A promise that resolves to the command output as a string.
  */
 export async function sh(cmd: string | string[]): Promise<string> {
-    return execAsync(cmd).catch((err) => {
-        console.error(typeof cmd === 'string' ? cmd : cmd.join(' '), err);
-        return '';
-    });
+  return execAsync(cmd).catch((err) => {
+    console.error(typeof cmd === 'string' ? cmd : cmd.join(' '), err);
+    return '';
+  });
 }
 
 /**
@@ -153,8 +153,8 @@ export async function sh(cmd: string | string[]): Promise<string> {
  * @returns An array of JSX elements, one for each monitor.
  */
 export function forMonitors(widget: (monitor: number) => JSX.Element): JSX.Element[] {
-    const n = Gdk.Display.get_default()?.get_n_monitors() || 1;
-    return range(n, 0).flatMap(widget);
+  const n = Gdk.Display.get_default()?.get_n_monitors() || 1;
+  return range(n, 0).flatMap(widget);
 }
 
 /**
@@ -168,7 +168,7 @@ export function forMonitors(widget: (monitor: number) => JSX.Element): JSX.Eleme
  * @returns An array of numbers within the specified range.
  */
 export function range(length: number, start = 1): number[] {
-    return Array.from({ length }, (_, i) => i + start);
+  return Array.from({ length }, (_, i) => i + start);
 }
 
 /**
@@ -182,27 +182,27 @@ export function range(length: number, start = 1): number[] {
  * @returns True if all dependencies are found, false otherwise.
  */
 export function dependencies(...bins: string[]): boolean {
-    const missing = bins.filter((bin) => {
-        try {
-            exec(`which ${bin}`);
-            return false;
-        } catch (e) {
-            console.error(e);
-            return true;
-        }
-    });
-
-    if (missing.length > 0) {
-        console.warn(Error(`missing dependencies: ${missing.join(', ')}`));
-        Notify({
-            summary: 'Dependencies not found!',
-            body: `The following dependencies are missing: ${missing.join(', ')}`,
-            iconName: icons.ui.warning,
-            timeout: 7000,
-        });
+  const missing = bins.filter((bin) => {
+    try {
+      exec(`which ${bin}`);
+      return false;
+    } catch (e) {
+      console.error(e);
+      return true;
     }
+  });
 
-    return missing.length === 0;
+  if (missing.length > 0) {
+    console.warn(Error(`missing dependencies: ${missing.join(', ')}`));
+    Notify({
+      summary: 'Dependencies not found!',
+      body: `The following dependencies are missing: ${missing.join(', ')}`,
+      iconName: icons.ui.warning,
+      timeout: 7000,
+    });
+  }
+
+  return missing.length === 0;
 }
 
 /**
@@ -214,13 +214,13 @@ export function dependencies(...bins: string[]): boolean {
  * @param app The application to launch.
  */
 export function launchApp(app: AstalApps.Application): void {
-    const exe = app.executable
-        .split(/\s+/)
-        .filter((str) => !str.startsWith('%') && !str.startsWith('@'))
-        .join(' ');
+  const exe = app.executable
+    .split(/\s+/)
+    .filter((str) => !str.startsWith('%') && !str.startsWith('@'))
+    .join(' ');
 
-    bash(`${exe} &`);
-    app.frequency += 1;
+  bash(`${exe} &`);
+  app.frequency += 1;
 }
 
 /**
@@ -234,18 +234,18 @@ export function launchApp(app: AstalApps.Application): void {
  * @returns True if the filepath is a valid image, false otherwise.
  */
 export function isAnImage(imgFilePath: string): boolean {
-    try {
-        const file = Gio.File.new_for_path(imgFilePath);
-        if (!file.query_exists(null)) {
-            return false;
-        }
-
-        GdkPixbuf.Pixbuf.new_from_file(imgFilePath);
-        return true;
-    } catch (error) {
-        console.error(error);
-        return false;
+  try {
+    const file = Gio.File.new_for_path(imgFilePath);
+    if (!file.query_exists(null)) {
+      return false;
     }
+
+    GdkPixbuf.Pixbuf.new_from_file(imgFilePath);
+    return true;
+  } catch (error) {
+    console.error(error);
+    return false;
+  }
 }
 
 /**
@@ -257,22 +257,22 @@ export function isAnImage(imgFilePath: string): boolean {
  * @param notifPayload The notification arguments containing summary, body, appName, iconName, urgency, timeout, category, transient, and id.
  */
 export function Notify(notifPayload: NotificationArgs): void {
-    let command = 'notify-send';
-    command += ` "${notifPayload.summary} "`;
-    if (notifPayload.body) command += ` "${notifPayload.body}" `;
-    if (notifPayload.appName) command += ` -a "${notifPayload.appName}"`;
-    if (notifPayload.iconName) command += ` -i "${notifPayload.iconName}"`;
-    if (notifPayload.urgency) command += ` -u "${notifPayload.urgency}"`;
-    if (notifPayload.timeout !== undefined) command += ` -t ${notifPayload.timeout}`;
-    if (notifPayload.category) command += ` -c "${notifPayload.category}"`;
-    if (notifPayload.transient) command += ` -e`;
-    if (notifPayload.id !== undefined) command += ` -r ${notifPayload.id}`;
+  let command = 'notify-send';
+  command += ` "${notifPayload.summary} "`;
+  if (notifPayload.body) command += ` "${notifPayload.body}" `;
+  if (notifPayload.appName) command += ` -a "${notifPayload.appName}"`;
+  if (notifPayload.iconName) command += ` -i "${notifPayload.iconName}"`;
+  if (notifPayload.urgency) command += ` -u "${notifPayload.urgency}"`;
+  if (notifPayload.timeout !== undefined) command += ` -t ${notifPayload.timeout}`;
+  if (notifPayload.category) command += ` -c "${notifPayload.category}"`;
+  if (notifPayload.transient) command += ` -e`;
+  if (notifPayload.id !== undefined) command += ` -r ${notifPayload.id}`;
 
-    execAsync(command)
-        .then()
-        .catch((err) => {
-            console.error(`Failed to send notification: ${err.message}`);
-        });
+  execAsync(command)
+    .then()
+    .catch((err) => {
+      console.error(`Failed to send notification: ${err.message}`);
+    });
 }
 
 /**
@@ -285,18 +285,18 @@ export function Notify(notifPayload: NotificationArgs): void {
  * @returns The corresponding Astal window anchor.
  */
 export function getPosition(pos: NotificationAnchor | OSDAnchor): Astal.WindowAnchor {
-    const positionMap: PositionAnchor = {
-        top: Astal.WindowAnchor.TOP,
-        'top right': Astal.WindowAnchor.TOP | Astal.WindowAnchor.RIGHT,
-        'top left': Astal.WindowAnchor.TOP | Astal.WindowAnchor.LEFT,
-        bottom: Astal.WindowAnchor.BOTTOM,
-        'bottom right': Astal.WindowAnchor.BOTTOM | Astal.WindowAnchor.RIGHT,
-        'bottom left': Astal.WindowAnchor.BOTTOM | Astal.WindowAnchor.LEFT,
-        right: Astal.WindowAnchor.RIGHT,
-        left: Astal.WindowAnchor.LEFT,
-    };
+  const positionMap: PositionAnchor = {
+    top: Astal.WindowAnchor.TOP,
+    'top right': Astal.WindowAnchor.TOP | Astal.WindowAnchor.RIGHT,
+    'top left': Astal.WindowAnchor.TOP | Astal.WindowAnchor.LEFT,
+    bottom: Astal.WindowAnchor.BOTTOM,
+    'bottom right': Astal.WindowAnchor.BOTTOM | Astal.WindowAnchor.RIGHT,
+    'bottom left': Astal.WindowAnchor.BOTTOM | Astal.WindowAnchor.LEFT,
+    right: Astal.WindowAnchor.RIGHT,
+    left: Astal.WindowAnchor.LEFT,
+  };
 
-    return positionMap[pos] || Astal.WindowAnchor.TOP;
+  return positionMap[pos] || Astal.WindowAnchor.TOP;
 }
 
 /**
@@ -310,26 +310,26 @@ export function getPosition(pos: NotificationAnchor | OSDAnchor): Astal.WindowAn
  * @returns True if the color is valid, false otherwise.
  */
 export function isValidGjsColor(color: string): boolean {
-    const colorLower = color.toLowerCase().trim();
+  const colorLower = color.toLowerCase().trim();
 
-    if (namedColors.has(colorLower)) {
-        return true;
-    }
+  if (namedColors.has(colorLower)) {
+    return true;
+  }
 
-    const hexColorRegex = /^#(?:[a-fA-F0-9]{3,4}|[a-fA-F0-9]{6,8})$/;
+  const hexColorRegex = /^#(?:[a-fA-F0-9]{3,4}|[a-fA-F0-9]{6,8})$/;
 
-    const rgbRegex = /^rgb\(\s*(\d{1,3}%?\s*,\s*){2}\d{1,3}%?\s*\)$/;
-    const rgbaRegex = /^rgba\(\s*(\d{1,3}%?\s*,\s*){3}(0|1|0?\.\d+)\s*\)$/;
+  const rgbRegex = /^rgb\(\s*(\d{1,3}%?\s*,\s*){2}\d{1,3}%?\s*\)$/;
+  const rgbaRegex = /^rgba\(\s*(\d{1,3}%?\s*,\s*){3}(0|1|0?\.\d+)\s*\)$/;
 
-    if (hexColorRegex.test(color)) {
-        return true;
-    }
+  if (hexColorRegex.test(color)) {
+    return true;
+  }
 
-    if (rgbRegex.test(colorLower) || rgbaRegex.test(colorLower)) {
-        return true;
-    }
+  if (rgbRegex.test(colorLower) || rgbaRegex.test(colorLower)) {
+    return true;
+  }
 
-    return false;
+  return false;
 }
 
 /**
@@ -342,7 +342,7 @@ export function isValidGjsColor(color: string): boolean {
  * @returns The input string with the first letter capitalized.
  */
 export function capitalizeFirstLetter(str: string): string {
-    return str.charAt(0).toUpperCase() + str.slice(1);
+  return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
 /**
@@ -354,8 +354,8 @@ export function capitalizeFirstLetter(str: string): string {
  * @returns The icon for the current distribution as a string.
  */
 export function getDistroIcon(): string {
-    const icon = distroIcons.find(([id]) => id === distro.id);
-    return icon ? icon[1] : ''; // default icon if not found
+  const icon = distroIcons.find(([id]) => id === distro.id);
+  return icon ? icon[1] : ''; // default icon if not found
 }
 
 /**
